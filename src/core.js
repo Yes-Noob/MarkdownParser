@@ -22,16 +22,18 @@ class MarkdownDoc {
      */
     parseDocument() {
         let doc = this.parseKeywords(this.doc)
-        let tokens = this.parseMarkdownToken(doc)
+        let tokens = this.getMarkdownTokens(doc)
         // 解析token
-        // pass
+        let html = this.parseToken(tokens)
+        return html
     }
 
     /** 解析markdown文档的所有关键词汇
      * @param {string} doc this.doc
      * @param {string} 解析后的文档
      */
-    parseKeywords(doc) {
+    parseKeywords() {
+        let doc = this.doc
         // 图片
         {
             let imageRegExp = /!\[.*?\]\(.*( ".*?")?\)/
@@ -139,7 +141,7 @@ class MarkdownDoc {
      * @param {string} doc this.doc
      * @return {Array} token集合
      */
-    parseMarkdownToken(doc) {
+    getMarkdownTokens(doc) {
         let tokens = [] // 用于存储所有解析出来的token
         while (doc !== "") { // 开始解析全部token
             // 从头开始匹配token字符
@@ -154,6 +156,15 @@ class MarkdownDoc {
             }
             else if (BLOCKQUOTE.test(doc)) { // 引用块
                 let token = doc.match(BLOCKQUOTE)[0]
+                // 将引用块前缀的空格删去
+                {
+                    let startTag = token.match(/^(> ?)+/gm)
+
+                    for (let v of startTag) {
+                        let startTag_noSpace = v.replaceAll(" ", "")
+                        token = token.replace(v, startTag_noSpace)
+                    }
+                }
                 doc = doc.replace(token, SPACE) // 删除
                 token = { type: "blockquote", string: token }
                 tokens.push(token)
@@ -161,7 +172,7 @@ class MarkdownDoc {
             else if (HR.test(doc)) { // 水平线
                 let token = doc.match(HR)[0]
                 doc = doc.replace(token, SPACE) // 删除
-                token = { type: "hr", string: "" }
+                token = { type: "hr" }
                 tokens.push(token)
             }
             else if (HEADER2.test(doc)) { // 水平线风格标题
@@ -213,7 +224,76 @@ class MarkdownDoc {
      * @return {string} html字符串
      */
     parseToken(tokens) {
-        // pass
+        let ret = ""
+        for (let v of tokens) {
+            let result = ""
+            switch (v.type) {
+                case "header": // 标题
+                    /** 将标题内容放进标签里
+                     * @param {string} str v.string
+                     * @param {int} level 标题等级
+                     * @return {string} 标题的html标签形式
+                     */
+                    let setHeaderInTag = function (str, level) {
+                        str = str.substring(level + 1, v.string.length)
+                        return "<h" + level + ">" + str + "</h" + level + ">"
+                    }
+                    if (/^######/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 6)
+                    }
+                    else if (/^#####/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 5)
+                    }
+                    else if (/^####/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 4)
+                    }
+                    else if (/^###/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 3)
+                    }
+                    else if (/^##/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 2)
+                    }
+                    else if (/^#/.test(v.string)) {
+                        result = setHeaderInTag(v.string, 1)
+                    }
+                    break
+                case "blockquote": // 引用块
+                    // pass
+                    break
+                case "header2": // 水平线标题
+                    if (/(-)$/.test(v.string)) {
+                        v.string = v.string.substring(0, v.string.indexOf("\n"))
+                        result = "<h1>" + v.string + "</h1>"
+                    }
+                    else {
+                        v.string = v.string.substring(0, v.string.indexOf("\n"))
+                        result = "<h2>" + v.string + "</h2>"
+                    }
+                    break
+                case "hr": // 水平线
+                    result = "<hr>"
+                    break
+                case "codechunk": // 代码块
+                    v.string = v.string.substring(v.string.indexOf("\n") + 1, v.string.length - 4)
+                    result = "<code lang='" + v.lang + "'>" + v.string + "</code>"
+                    break
+                case "ul": // 无序列表
+                    // pass
+                    break
+                case "ol": // 有序列表
+                    // pass
+                    break
+                case "paragraph": // 段落
+                    v.string = v.string.replaceAll(/  $/gm, "<br>")
+                        .replaceAll("\n", "")
+                    result = "<p>" + v.string + "</p>"
+                case "table": // 表格
+                    // pass
+                    break
+            }
+            ret += result
+        }
+        return ret
     }
 }
 
