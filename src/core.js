@@ -308,11 +308,50 @@ class MarkdownDoc {
                 result = "<p>" + v.string + "</p>"
             }
             else if (v.type === "table") { // 表格
-                // pass
+                let alignment = []
+                // 获取对齐方式
+                let aligns = v.string.match(/(?<=^.+\n).+/g)[0]
+                let strArray = aligns.match(/((?<=\|).+?(?=\|))/g)
+                for (let k = 0; k < strArray.length; k++) {
+                    let v = strArray[k]
+                    if (v[0] === ":" && v[v.length - 1] === ":") { // 居中
+                        alignment.push("center")
+                    }
+                    else if (v[0] === ":") { // 左对齐
+                        alignment.push("left")
+                    }
+                    else { // 右对齐
+                        alignment.push("right")
+                    }
+                }
+                v.string = v.string.replace(aligns + "\n", "") // 删除
+                // 捕获表格内容
+                let $content = "<table>"
+                let lineNumber = 0
+                while (v.string !== "") {
+                    let content = v.string.match(/^.+/)[0].match(/((?<=\|).+?(?=\|))/)
+                    let html = ""
+                    if (lineNumber === 0) { // 如果是表头
+                        for (let k = 0; k < content.length; k++) {
+                            html += "<th style='text-align: " + alignment[k] + ";'>" + content[k] + "</th>"
+                        }
+                        v.string = v.string.replace(/^.+\n?/g, "")
+                        html = "<thead><tr>" + html + "</tr></thead><tbody>"
+                    }
+                    else {
+                        for (let k = 0; k < content.length; k++) {
+                            html += "<td style='text-align: " + alignment[k] + ";'>" + content[k] + "</td>"
+                        }
+                        v.string = v.string.replace(/^.+\n?/g, "")
+                        html = "<tr>" + html + "</tr>"
+                    }
+                    lineNumber++
+                    $content += html
+                }
+                $content += "</tbody></table>"
+                result = $content
             }
             ret += result
-            document.write(ret)
-            document.write(ret.replaceAll("<", "&lt;").replaceAll(">", "&gt;"))
         }
         return ret
     }

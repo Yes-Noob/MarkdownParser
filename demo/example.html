@@ -16,10 +16,15 @@
     <div class="container" id="markdownDoc"></div>
     <script>
 let a = new MarkdownDoc(`
-> asd
+|asdsad|sfd|
+|:--|--:|
+|asdasddfdhdasd| yhdsa|
+|efdf|sdfsgdfghtrdfg|
 `)
 let s = a.getMarkdownTokens(a.doc)
 let d = a.parseToken(s)
+document.write(d)
+document.write("content : <br>" + d.replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;"))
     </script>
 </body>
 
