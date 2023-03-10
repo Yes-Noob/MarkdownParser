@@ -192,7 +192,7 @@ class MarkdownDoc {
             else if (LIST.test(doc)) { // 无序列表或有序列表
                 let token = doc.match(LIST)[0]
                 doc = doc.replace(token, SPACE) // 删除
-                    .replaceAll(/(?<=^ *)(-|\+|\*) /gm, "- ")
+                token = token.replaceAll(/(?<=^ *)(\+|\*) /gm, "- ")
                 token = token.replaceAll(/(  )$/gm, "<br>")
                 token = { type: "list", string: token }
                 tokens.push(token)
@@ -278,12 +278,19 @@ class MarkdownDoc {
                 result = "<code lang='" + v.lang + "'>" + v.string + "</code>"
             }
             else if (v.type === "list") { // 无序列表或有序列表
-                let all = v.string.match(/^( *(-|\d\.) .+(\n(?!- ).+)*)/gm)
+                let all = v.string.match(/^( *(-|\d\.) .+(\n(?! *- ).+)*)/gm)
                 let level = -1
                 let last_list_type = []
+                let num = 0
+                console.log(v.string)
+                console.log("all = ", all)
                 for (let content of all) {
                     let indentNumber = content.match(/^ */g)[0].length / this.indent // 当前缩进数量
-                    let d = "<li>" + content.match(/(?<=^( *(-|\d\.) )).+(\n(?!- ).+)*/)[0] + "</li>" // 列表文字内容
+                    let d = "<li>" + content.match(/(?<=^( *(-|\d\.) )).+(\n(?! *- ).+)*/)[0] + "</li>" // 列表文字内容
+                    num++
+                    if (num === 2) {
+                        console.log(d)
+                    }
                     if (indentNumber > level) { // 如果缩进量大于上一个列表缩进量
                         let number = indentNumber - level
                         last_list_type.push(/(?<=^( *))- /.test(content) ? "<ul>" : "<ol>")

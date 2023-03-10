@@ -12,6 +12,6 @@ const HEADER2 = /^(.+\n(={3,}|-{3,}))/g
 const PARAGHAPH = /^(.+\n)+/g
 const BLOCKQUOTE = /^(>+.+\n)((> )?.+\n)*/g
 const HR = /^(-{3,}|={3,}|\*{3,})(?!.)/g
-const LIST = /^(( *(-|\d\.) .+(\n(?!- ).+)*)\n)+/g
+const LIST = /^(( *(-|\+|\*|\d\.) .+(\n(?!(-|\+|\*) ).+)*)\n)+/g
 const CODECHUNK = /^(```.+?```)/gs
 const TABLE = /^(((\|[^\|\n]+)+\|\n)(( |\||:|-)+)\n((\|[^\|\n]+)+\|\n)+)/g
