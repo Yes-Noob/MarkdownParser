@@ -159,13 +159,8 @@ class MarkdownDoc {
                 let token = doc.match(BLOCKQUOTE)[0]
                 doc = doc.replace(token, SPACE) // 删除
                 // 将引用块前缀的空格删去
-                {
-                    let startTag = token.match(/^(> ?)+/gm)
-                    for (let v of startTag) {
-                        let startTag_noSpace = v.replaceAll(" ", "")
-                        token = token.replace(v, startTag_noSpace)
-                    }
-                }
+                token = token.replaceAll("> ", ">")
+                console.log("$$$", token)
                 token = token.replaceAll(/^(?=[^>])/gm, ">")
                 token = { type: "blockquote", string: token }
                 tokens.push(token)
@@ -255,8 +250,11 @@ class MarkdownDoc {
                 }
             }
             else if (v.type === "blockquote") { // 引用块
+                console.log("STR = ", v.string)
                 v.string = v.string.replaceAll(/^>/gm, "") // 减少一个层次
+                
                 let tokens = this.getMarkdownTokens(v.string)
+                console.log("tokes = ", tokens)
                 let htmlContent = this.parseToken(tokens)
                 result = "<div class='blockquote'>" + htmlContent + "</div>"
             }
@@ -278,19 +276,14 @@ class MarkdownDoc {
                 result = "<code lang='" + v.lang + "'>" + v.string + "</code>"
             }
             else if (v.type === "list") { // 无序列表或有序列表
-                let all = v.string.match(/^( *(-|\d\.) .+(\n(?! *- ).+)*)/gm)
+                let all = v.string.match(/^( *(-|\d\.) .+(\n(?! *(-|\d\.) ).+)*)/gm)
                 let level = -1
                 let last_list_type = []
-                let num = 0
-                console.log(v.string)
+                console.log("v.string = " + v.string)
                 console.log("all = ", all)
                 for (let content of all) {
                     let indentNumber = content.match(/^ */g)[0].length / this.indent // 当前缩进数量
-                    let d = "<li>" + content.match(/(?<=^( *(-|\d\.) )).+(\n(?! *- ).+)*/)[0] + "</li>" // 列表文字内容
-                    num++
-                    if (num === 2) {
-                        console.log(d)
-                    }
+                    let d = "<li>" + content.match(/(?<=^( *(-|\d\.) )).+(\n(?! *(-|\d\.) ).+)*/)[0] + "</li>" // 列表文字内容
                     if (indentNumber > level) { // 如果缩进量大于上一个列表缩进量
                         let number = indentNumber - level
                         last_list_type.push(/(?<=^( *))- /.test(content) ? "<ul>" : "<ol>")

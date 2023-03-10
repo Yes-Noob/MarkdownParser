@@ -16,11 +16,15 @@
     <div class="container" id="markdownDoc"></div>
     <script>
 let a = new MarkdownDoc(`
-+ fdsfg
-+ fdsg
+> 1. fdss
+> 2. fdsgf
+>     - sdsf
+>     - dgfsf
+> 3. rfdg
 `)
 let s = a.getMarkdownTokens(a.doc)
 let d = a.parseToken(s)
+document.write(d.replaceAll("<", "&lt;").replaceAll(">", "&gt;"))
 document.write(d)
     </script>
 </body>

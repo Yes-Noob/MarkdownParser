@@ -1,19 +1,20 @@
-.md-h1 {}
-.md-h2 {}
-.md-h3 {}
-.md-h4 {}
-.md-h5 {}
-.md-h6 {}
-.md-p {}
-.md-code {}
-.md-ul {}
-.md-ol {}
-.md-li {}
-.md-hr {}
-.md-a {}
-.md-img {}
-.md-table {}
-.md-b {}
-.md-i {}
-.md-tasklist
-.md-blockquote {}
+h1 {}
+h2 {}
+h3 {}
+h4 {}
+h5 {}
+h6 {}
+p {}
+code {}
+ul {}
+ol {}
+li {}
+hr {}
+a {}
+img {}
+table {}
+b {}
+i {}
+.blockquote {
+    background-color: #0066aa55;
+}
