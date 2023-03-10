@@ -14,6 +14,7 @@ class MarkdownDoc {
         }
         else {
             this.doc = doc
+            this.indent = 4
         }
     }
 
@@ -138,7 +139,7 @@ class MarkdownDoc {
     }
 
     /** 解析一个Markdown文档的token元素
-     * @param {string} doc this.doc
+     * @param {string} doc 
      * @return {Array} token集合
      */
     getMarkdownTokens(doc) {
@@ -156,16 +157,16 @@ class MarkdownDoc {
             }
             else if (BLOCKQUOTE.test(doc)) { // 引用块
                 let token = doc.match(BLOCKQUOTE)[0]
+                doc = doc.replace(token, SPACE) // 删除
                 // 将引用块前缀的空格删去
                 {
                     let startTag = token.match(/^(> ?)+/gm)
-
                     for (let v of startTag) {
                         let startTag_noSpace = v.replaceAll(" ", "")
                         token = token.replace(v, startTag_noSpace)
                     }
                 }
-                doc = doc.replace(token, SPACE) // 删除
+                token = token.replaceAll(/^(?=[^>])/gm, ">")
                 token = { type: "blockquote", string: token }
                 tokens.push(token)
             }
@@ -188,16 +189,12 @@ class MarkdownDoc {
                 token = { type: "codechunk", string: token, lang: ((lang !== "\n") ? lang : "") }
                 tokens.push(token)
             }
-            else if (UL.test(doc)) { // 无序列表
-                let token = doc.match(UL)[0]
+            else if (LIST.test(doc)) { // 无序列表或有序列表
+                let token = doc.match(LIST)[0]
                 doc = doc.replace(token, SPACE) // 删除
-                token = { type: "ul", string: token }
-                tokens.push(token)
-            }
-            else if (OL.test(doc)) { // 有序列表
-                let token = doc.match(OL)[0]
-                doc = doc.replace(token, SPACE) // 删除
-                token = { type: "ol", string: token }
+                    .replaceAll(/(?<=^ *)(-|\+|\*) /gm, "- ")
+                token = token.replaceAll(/(  )$/gm, "<br>")
+                token = { type: "list", string: token }
                 tokens.push(token)
             }
             else if (TABLE.test(doc)) { // 表格
@@ -212,6 +209,7 @@ class MarkdownDoc {
                     token = token.substring(0, token.indexOf(token.match(/^(-|\*|\+|!|    |\d\. .+)/gm)[0]))
                 }
                 doc = doc.replace(token, SPACE) // 删除
+                token = token.replaceAll(/(  )$/gm, "<br>")
                 token = { type: "paragraph", string: token }
                 tokens.push(token)
             }
@@ -227,71 +225,94 @@ class MarkdownDoc {
         let ret = ""
         for (let v of tokens) {
             let result = ""
-            switch (v.type) {
-                case "header": // 标题
-                    /** 将标题内容放进标签里
-                     * @param {string} str v.string
-                     * @param {int} level 标题等级
-                     * @return {string} 标题的html标签形式
-                     */
-                    let setHeaderInTag = function (str, level) {
-                        str = str.substring(level + 1, v.string.length)
-                        return "<h" + level + ">" + str + "</h" + level + ">"
+            if (v.type === "header") { // 标题
+                /** 将标题内容放进标签里
+                 * @param {string} str v.string
+                 * @param {int} level 标题等级
+                 * @return {string} 标题的html标签形式
+                 */
+                let setHeaderInTag = function (str, level) {
+                    str = str.substring(level + 1, v.string.length)
+                    return "<h" + level + ">" + str + "</h" + level + ">"
+                }
+                if (/^######/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 6)
+                }
+                else if (/^#####/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 5)
+                }
+                else if (/^####/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 4)
+                }
+                else if (/^###/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 3)
+                }
+                else if (/^##/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 2)
+                }
+                else if (/^#/.test(v.string)) {
+                    result = setHeaderInTag(v.string, 1)
+                }
+            }
+            else if (v.type === "blockquote") { // 引用块
+                v.string = v.string.replaceAll(/^>/gm, "") // 减少一个层次
+                let tokens = this.getMarkdownTokens(v.string)
+                let htmlContent = this.parseToken(tokens)
+                result = "<div class='blockquote'>" + htmlContent + "</div>"
+            }
+            else if (v.type === "header2") { // 水平线标题
+                if (/(-)$/.test(v.string)) {
+                    v.string = v.string.substring(0, v.string.indexOf("\n"))
+                    result = "<h1>" + v.string + "</h1>"
+                }
+                else {
+                    v.string = v.string.substring(0, v.string.indexOf("\n"))
+                    result = "<h2>" + v.string + "</h2>"
+                }
+            }
+            else if (v.type === "hr") { // 水平线
+                result = "<hr>"
+            }
+            else if (v.type === "codechunk") { // 代码块
+                v.string = v.string.substring(v.string.indexOf("\n") + 1, v.string.length - 4)
+                result = "<code lang='" + v.lang + "'>" + v.string + "</code>"
+            }
+            else if (v.type === "list") { // 无序列表或有序列表
+                let all = v.string.match(/^( *(-|\d\.) .+(\n(?!- ).+)*)/gm)
+                let level = -1
+                let last_list_type = []
+                for (let content of all) {
+                    let indentNumber = content.match(/^ */g)[0].length / this.indent // 当前缩进数量
+                    let d = "<li>" + content.match(/(?<=^( *(-|\d\.) )).+(\n(?!- ).+)*/)[0] + "</li>" // 列表文字内容
+                    if (indentNumber > level) { // 如果缩进量大于上一个列表缩进量
+                        let number = indentNumber - level
+                        last_list_type.push(/(?<=^( *))- /.test(content) ? "<ul>" : "<ol>")
+                        d = last_list_type[last_list_type.length - 1].repeat(number) + d
+                        level += number
                     }
-                    if (/^######/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 6)
+                    else if (indentNumber < level) {
+                        let number = level - indentNumber
+                        d = (last_list_type[last_list_type.length - 1] === "<ul>"
+                            ? "</ul>" : "</ol>").repeat(number) + d
+                        last_list_type.length -= number
+                        level -= number
                     }
-                    else if (/^#####/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 5)
-                    }
-                    else if (/^####/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 4)
-                    }
-                    else if (/^###/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 3)
-                    }
-                    else if (/^##/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 2)
-                    }
-                    else if (/^#/.test(v.string)) {
-                        result = setHeaderInTag(v.string, 1)
-                    }
-                    break
-                case "blockquote": // 引用块
-                    // pass
-                    break
-                case "header2": // 水平线标题
-                    if (/(-)$/.test(v.string)) {
-                        v.string = v.string.substring(0, v.string.indexOf("\n"))
-                        result = "<h1>" + v.string + "</h1>"
-                    }
-                    else {
-                        v.string = v.string.substring(0, v.string.indexOf("\n"))
-                        result = "<h2>" + v.string + "</h2>"
-                    }
-                    break
-                case "hr": // 水平线
-                    result = "<hr>"
-                    break
-                case "codechunk": // 代码块
-                    v.string = v.string.substring(v.string.indexOf("\n") + 1, v.string.length - 4)
-                    result = "<code lang='" + v.lang + "'>" + v.string + "</code>"
-                    break
-                case "ul": // 无序列表
-                    // pass
-                    break
-                case "ol": // 有序列表
-                    // pass
-                    break
-                case "paragraph": // 段落
-                    v.string = v.string.replaceAll(/  $/gm, "<br>")
-                        .replaceAll("\n", "")
-                    result = "<p>" + v.string + "</p>"
-                case "table": // 表格
-                    // pass
-                    break
+                    result += d
+                }
+                result += (last_list_type[last_list_type.length - 1] === "<ul>"
+                    ? "</ul>" : "</ol>").repeat(level + 1)
+            }
+            else if (v.type === "paragraph") { // 段落
+                v.string = v.string.replaceAll(/  $/gm, "<br>")
+                    .replaceAll("\n", "")
+                result = "<p>" + v.string + "</p>"
+            }
+            else if (v.type === "table") { // 表格
+                // pass
             }
             ret += result
+            document.write(ret)
+            document.write(ret.replaceAll("<", "&lt;").replaceAll(">", "&gt;"))
         }
         return ret
     }
