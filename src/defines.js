@@ -15,3 +15,4 @@ const HR = /^(-{3,}|={3,}|\*{3,})(?!.)/g
 const LIST = /^(( *(-|\+|\*|\d\.) .+(\n(?!(-|\+|\*) ).+)*)\n)+/g
 const CODECHUNK = /^(```.+?```)/gs
 const TABLE = /^(((\|[^\|\n]+)+\|\n)(( |\||:|-)+)\n((\|[^\|\n]+)+\|\n)+)/g
+const ESCAPE = "<ESCAPE\t\s\b>"

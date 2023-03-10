@@ -22,19 +22,23 @@ class MarkdownDoc {
      * @return {string} 解析后的html格式
      */
     parseDocument() {
-        let doc = this.parseKeywords(this.doc)
+        let escapeChar = this.doc.match(/\\./g)
+        let doc = this.doc.replaceAll(/\\./g, ESCAPE)
+        doc = this.parseKeywords(doc)
         let tokens = this.getMarkdownTokens(doc)
         // 解析token
         let html = this.parseToken(tokens)
+        for (let v of escapeChar) {
+            html = html.replace(ESCAPE, v[1])
+        }
         return html
     }
 
     /** 解析markdown文档的所有关键词汇
-     * @param {string} doc this.doc
+     * @param {string} doc
      * @param {string} 解析后的文档
      */
-    parseKeywords() {
-        let doc = this.doc
+    parseKeywords(doc) {
         // 图片
         {
             let imageRegExp = /!\[.*?\]\(.*( ".*?")?\)/

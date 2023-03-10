@@ -20,12 +20,12 @@ let a = new MarkdownDoc(`
 > 2. fdsgf
 >     - sdsf
 >     - dgfsf
-> 3. rfdg
+
+\\> 3. rfdg
 `)
-let s = a.getMarkdownTokens(a.doc)
-let d = a.parseToken(s)
-document.write(d.replaceAll("<", "&lt;").replaceAll(">", "&gt;"))
-document.write(d)
+let s = a.parseDocument()
+document.write(s.replaceAll("<", "&lt;").replaceAll(">", "&gt;"))
+document.write(s)
     </script>
 </body>
 
