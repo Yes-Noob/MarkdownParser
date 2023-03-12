@@ -17,3 +17,4 @@ const CODECHUNK = /^(```.+?```)/gs
 const TABLE = /^(((\|[^\|\n]+)+\|\n)(( |\||:|-)+)\n((\|[^\|\n]+)+\|\n)+)/g
 const INLINECODECHUNK = /^(    .+\n)+/g
 const ESCAPE = "<ESCAPE\t\s\b\u3000>"
+const BI = "<b><i>$content</i></b>"

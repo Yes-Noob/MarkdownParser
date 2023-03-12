@@ -53,12 +53,12 @@ class MarkdownDoc {
                     .replace("$src", src)
                     .replace("$title", title)
                 doc = doc.replace(/!\[.*?\]\(.*( ".*?")?\)/, html)
-                            }
+            }
         }
         // 链接1
         {
             let text = doc.match(/(?<!!)\[.*?\]\(.*\)/g) || []
-                        for (let v of text) {
+            for (let v of text) {
                 let content = v.match(/(?<=\[).*?(?=\])/)[0]
                 let href = v.match(/(?<=\().+?(?=\))/)[0]
                 let html = A.replace("$href", href)
@@ -74,12 +74,28 @@ class MarkdownDoc {
                 doc = doc.replace(/<https?:.+?>/, html)
             }
         }
+        // 粗斜体
+        {
+            let text = doc.match(/(?<=\*\*\*).+?(?=\*\*\*)/g) || []
+            for (let v of text) {
+                let html = BI.replace("$content", v)
+                doc = doc.replace(/\*\*\*.+?\*\*\*/, html)
+            }
+        }
+        // 粗斜体2
+        {
+            let text = doc.match(/(?<=___).+?(?=___)/g) || []
+            for (let v of text) {
+                let html = BI.replace("$content", v)
+                doc = doc.replace(/___.+?___/, html)
+            }
+        }
         // 粗体
         {
             let text = doc.match(/(?<=\*\*).+?(?=\*\*)/g) || []
             for (let v of text) {
-                                let html = B.replace("$content", v)
-                                doc = doc.replace(/\*\*.+?\*\*/, html)
+                let html = B.replace("$content", v)
+                doc = doc.replace(/\*\*.+?\*\*/, html)
             }
         }
         // 粗体2
