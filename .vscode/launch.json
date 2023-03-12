@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "G:/Yes-Noob/项目/MarkdownParser/demo/example.html",
+            "url": "G:\\Yes-Noob\\项目\\MarkdownParser\\demo\\example.html",
             "webRoot": "${workspaceFolder}"
         }
     ]
